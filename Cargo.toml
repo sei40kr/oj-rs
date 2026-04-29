@@ -1,0 +1,25 @@
+[package]
+name = "ojrs"
+version = "0.1.0"
+edition = "2021"
+description = "Rust port of online-judge-tools/oj"
+license = "MIT"
+
+[[bin]]
+name = "oj"
+path = "src/main.rs"
+
+[dependencies]
+anyhow = "1"
+clap = { version = "4", features = ["derive"] }
+command-group = "5"
+glob = "0.3"
+rayon = "1"
+regex = "1"
+shlex = "1"
+similar = "2"
+tempfile = "3"
+
+[profile.release]
+lto = true
+codegen-units = 1
