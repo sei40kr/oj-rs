@@ -7,7 +7,7 @@ use std::time::Duration;
 
 use anyhow::Result;
 
-use crate::domain::{CaseOutcome, DisplayMode, Sample, TestCase};
+use crate::domain::{CaseOutcome, DisplayMode, Language, Sample, TestCase};
 
 /// Inputs for the test-case discovery port.
 #[derive(Debug, Clone)]
@@ -96,6 +96,47 @@ pub trait LoginReporter: Send + Sync {
 
 pub trait SampleWriter: Send + Sync {
     fn write(&self, path: &Path, content: &[u8]) -> Result<()>;
+}
+
+/// Submits source code to an online judge. Implementations are expected to
+/// have a session that has already authenticated via the `Authenticator` port.
+pub trait Submitter: Send + Sync {
+    /// Languages exposed by the problem's submit page. Order matches the page.
+    fn available_languages(&self, problem_url: &str) -> Result<Vec<Language>>;
+    /// POST the submission and return the URL of the resulting entry.
+    fn submit(
+        &self,
+        problem_url: &str,
+        language_id: &str,
+        source_code: &[u8],
+    ) -> Result<SubmissionReceipt>;
+}
+
+#[derive(Debug, Clone)]
+pub struct SubmissionReceipt {
+    pub submission_url: String,
+}
+
+/// Yes/no confirmation prompt for submission. Separate from `CredentialPrompt`
+/// because the input semantics differ (single-character read vs. line read).
+pub trait SubmitConfirmer: Send + Sync {
+    fn confirm_submit(&self) -> Result<bool>;
+}
+
+/// User-facing presentation of the submit capability.
+///
+/// Lifecycle (driven by the use case):
+/// 1. `source_loaded(byte_count)` — once, after the source file is read.
+/// 2. Either `language_chosen(language)` once **or** `language_unresolved(...)`
+///    + a `bail!` from the use case when no single language matched.
+/// 3. `submission_aborted()` if the user declined the confirmation prompt.
+/// 4. `submission_succeeded(receipt)` on a successful POST.
+pub trait SubmitReporter: Send + Sync {
+    fn source_loaded(&self, byte_count: usize);
+    fn language_chosen(&self, language: &Language);
+    fn language_unresolved(&self, candidates: &[Language]);
+    fn submission_aborted(&self);
+    fn submission_succeeded(&self, receipt: &SubmissionReceipt);
 }
 
 /// User-facing presentation of the sample-download capability.

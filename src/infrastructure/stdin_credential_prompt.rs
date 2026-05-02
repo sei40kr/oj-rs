@@ -31,7 +31,10 @@ impl CredentialPrompt for StdinCredentialPrompt {
             .lock()
             .read_line(&mut line)
             .context("failed to read username")?;
-        Ok(line.trim_end_matches('\n').trim_end_matches('\r').to_string())
+        Ok(line
+            .trim_end_matches('\n')
+            .trim_end_matches('\r')
+            .to_string())
     }
 
     fn prompt_password(&self) -> Result<String> {

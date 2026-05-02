@@ -15,7 +15,7 @@ Listed in planned migration order.
 | `test` (`t`) | ✅ | Done |
 | `download` (`d`, `dl`) | 🚧 | AtCoder only; `--system` not yet wired |
 | `login` | 🚧 | AtCoder only; form login blocked by Cloudflare Turnstile (use `--cookie`) |
-| `submit` (`s`) | ⏳ | Not started |
+| `submit` (`s`) | 🚧 | AtCoder only; POST blocked by Cloudflare Turnstile (same as `login`) |
 | `generate-input` (`g/i`) | ⏳ | Not started |
 | `generate-output` (`g/o`) | ⏳ | Not started |
 | `test-reactive` (`t/r`) | ⏳ | Not started |
@@ -70,17 +70,33 @@ Listed in planned migration order.
 | `--dropbox-token` | ⏳ |
 | `--log-file` | ⏳ |
 
+### `oj submit` flags
+
+| Flag | Status |
+| --- | --- |
+| `-l, --language` | ✅ |
+| `--no-guess` | ✅ |
+| `-y, --yes` | ✅ |
+| `-w, --wait` | ✅ |
+| `--cookie` | ✅ |
+| Positional URL + FILE | ✅ (URL required; history-based guess not ported) |
+| `--guess-cxx-latest` | ⏳ |
+| `--guess-cxx-compiler` | ⏳ |
+| `--guess-python-version` | ⏳ |
+| `--guess-python-interpreter` | ⏳ |
+| `--open` / `--no-open` | ⏳ (submission URL is printed instead) |
+
 ### Supported online judges
 
-`test` runs locally, so it's judge-agnostic. `download` and `login` currently support AtCoder only; other services return `unsupported judge`.
+`test` runs locally, so it's judge-agnostic. `download`, `login`, and `submit` currently support AtCoder only; other services return `unsupported judge`.
 
-| Judge | `download` | `login` |
-| --- | --- | --- |
-| AtCoder | ✅ | 🚧 |
-| Codeforces | ⏳ | ⏳ |
-| yukicoder | ⏳ | ⏳ |
-| Aizu Online Judge | ⏳ | ⏳ |
-| others | ⏳ | ⏳ |
+| Judge | `download` | `login` | `submit` |
+| --- | --- | --- | --- |
+| AtCoder | ✅ | 🚧 | 🚧 |
+| Codeforces | ⏳ | ⏳ | ⏳ |
+| yukicoder | ⏳ | ⏳ | ⏳ |
+| Aizu Online Judge | ⏳ | ⏳ | ⏳ |
+| others | ⏳ | ⏳ | ⏳ |
 
 ## Build
 
@@ -103,6 +119,9 @@ oj test -c ./a.out -j 4 -D
 oj login https://atcoder.jp/                     # interactive prompt
 oj login --check https://atcoder.jp/             # is the saved session still valid?
 oj login --cookie ./cookies.json https://atcoder.jp/  # reuse a browser-exported jar
+
+oj submit https://atcoder.jp/contests/abc100/tasks/abc100_a main.cpp
+oj submit -l "C++ 23" -y https://atcoder.jp/contests/abc100/tasks/abc100_a main.cpp
 ```
 
 ## License

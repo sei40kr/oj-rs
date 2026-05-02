@@ -7,7 +7,9 @@ use std::time::Duration;
 
 use clap::{Args, Parser, Subcommand, ValueEnum};
 
-use crate::application::{DiscoveryQuery, DownloadSamplesInput, LoginInput, RunTestsInput};
+use crate::application::{
+    DiscoveryQuery, DownloadSamplesInput, LoginInput, RunTestsInput, SubmitInput,
+};
 use crate::domain::{CompareMode as DomainCompareMode, DisplayMode as DomainDisplayMode};
 
 #[derive(Parser)]
@@ -30,6 +32,9 @@ pub enum Command {
 
     #[command(about = "Sign in to an online judge")]
     Login(LoginArgs),
+
+    #[command(alias = "s", about = "Submit a source file to an online judge")]
+    Submit(SubmitArgs),
 }
 
 #[derive(Args, Debug)]
@@ -204,6 +209,57 @@ impl LoginArgs {
             username: self.username,
             password: self.password,
             check_only: self.check,
+        }
+    }
+}
+
+#[derive(Args, Debug)]
+pub struct SubmitArgs {
+    /// Problem URL (e.g., `https://atcoder.jp/contests/abc123/tasks/abc123_a`).
+    #[arg(value_name = "URL")]
+    pub url: String,
+
+    /// Source file to submit.
+    #[arg(value_name = "FILE")]
+    pub file: PathBuf,
+
+    /// Language ID, or one or more substring keywords matched against
+    /// language names (e.g., `-l "C++ 20"`). When omitted, guessed from the
+    /// file extension; pass `--no-guess` to disable.
+    #[arg(short = 'l', long = "language")]
+    pub language: Option<String>,
+
+    /// Disable file-extension based language guessing.
+    #[arg(long = "no-guess")]
+    pub no_guess: bool,
+
+    /// Skip the confirmation prompt.
+    #[arg(short = 'y', long = "yes")]
+    pub yes: bool,
+
+    /// Total wait in seconds, split before and after the prompt.
+    #[arg(
+        short = 'w',
+        long = "wait",
+        value_name = "SECOND",
+        default_value_t = 3.0
+    )]
+    pub wait: f64,
+
+    /// Path to the cookie jar file.
+    #[arg(long = "cookie", value_name = "PATH")]
+    pub cookie: Option<PathBuf>,
+}
+
+impl SubmitArgs {
+    pub fn into_use_case_input(self) -> SubmitInput {
+        SubmitInput {
+            problem_url: self.url,
+            file: self.file,
+            language: self.language,
+            guess: !self.no_guess,
+            yes: self.yes,
+            wait: Duration::from_secs_f64(self.wait.max(0.0)),
         }
     }
 }

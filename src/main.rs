@@ -11,12 +11,13 @@ mod cli;
 mod domain;
 mod infrastructure;
 
-use crate::application::{DownloadSamples, Login, RunTests};
+use crate::application::{DownloadSamples, Login, RunTests, Submit};
 use crate::cli::{Cli, Command};
 use crate::infrastructure::{
-    AtCoderAuthenticator, AtCoderDownloader, ConsoleLoginReporter, ConsoleSampleDownloadReporter,
-    ConsoleTestRunReporter, FsSampleWriter, FsTestCaseRepository, ShellJudgeRunner,
-    ShellSolutionExecutor, StdinCredentialPrompt,
+    AtCoderAuthenticator, AtCoderDownloader, AtCoderSubmitter, ConsoleLoginReporter,
+    ConsoleSampleDownloadReporter, ConsoleSubmitReporter, ConsoleTestRunReporter, FsSampleWriter,
+    FsTestCaseRepository, ShellJudgeRunner, ShellSolutionExecutor, StdinCredentialPrompt,
+    StdinSubmitConfirmer,
 };
 
 fn main() {
@@ -36,6 +37,7 @@ fn dispatch(cli: Cli) -> Result<i32> {
         Command::Test(args) => run_test_command(args),
         Command::Download(args) => run_download_command(args),
         Command::Login(args) => run_login_command(args),
+        Command::Submit(args) => run_submit_command(args),
     }
 }
 
@@ -101,6 +103,26 @@ fn run_login_command(args: cli::LoginArgs) -> Result<i32> {
     Ok(if output.logged_in { 0 } else { 1 })
 }
 
+fn run_submit_command(args: cli::SubmitArgs) -> Result<i32> {
+    let service = service_from_url(&args.url)?;
+    let cookie_path = match args.cookie.as_ref() {
+        Some(path) => path.clone(),
+        None => default_cookie_path()?,
+    };
+
+    let submitter = submitter_for(service, cookie_path)?;
+    let confirmer = StdinSubmitConfirmer::new();
+    let reporter = ConsoleSubmitReporter::new();
+
+    let use_case = Submit {
+        submitter: submitter.as_ref(),
+        confirmer: &confirmer,
+        reporter: &reporter,
+    };
+    let output = use_case.execute(args.into_use_case_input())?;
+    Ok(if output.submitted { 0 } else { 1 })
+}
+
 /// Online judges supported by this binary. Both downloaders and authenticators
 /// dispatch on this enum so a new judge needs to be wired up in one place.
 #[derive(Copy, Clone, Debug)]
@@ -132,6 +154,15 @@ fn authenticator_for(
 ) -> Result<Box<dyn application::ports::Authenticator>> {
     match service {
         Service::AtCoder => Ok(Box::new(AtCoderAuthenticator::new(cookie_path)?)),
+    }
+}
+
+fn submitter_for(
+    service: Service,
+    cookie_path: PathBuf,
+) -> Result<Box<dyn application::ports::Submitter>> {
+    match service {
+        Service::AtCoder => Ok(Box::new(AtCoderSubmitter::new(cookie_path)?)),
     }
 }
 
