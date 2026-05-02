@@ -14,7 +14,7 @@ Listed in planned migration order.
 | --- | --- | --- |
 | `test` (`t`) | ✅ | Done |
 | `download` (`d`, `dl`) | 🚧 | AtCoder only; `--system` not yet wired |
-| `login` | ⏳ | Not started |
+| `login` | 🚧 | AtCoder only; form login blocked by Cloudflare Turnstile (use `--cookie`) |
 | `submit` (`s`) | ⏳ | Not started |
 | `generate-input` (`g/i`) | ⏳ | Not started |
 | `generate-output` (`g/o`) | ⏳ | Not started |
@@ -45,6 +45,17 @@ Listed in planned migration order.
 | `--print-memory` | ⏳ |
 | `--log-file` | ⏳ |
 
+### `oj login` flags
+
+| Flag | Status |
+| --- | --- |
+| `-u, --username` | ✅ |
+| `-p, --password` | ✅ |
+| `--check` | ✅ |
+| `--cookie` | ✅ |
+| Positional URL | ✅ |
+| `--use-browser` | ⏳ |
+
 ### `oj download` flags
 
 | Flag | Status |
@@ -61,15 +72,15 @@ Listed in planned migration order.
 
 ### Supported online judges
 
-`test` runs locally, so it's judge-agnostic. `download` currently supports AtCoder only; other services return `unsupported judge`.
+`test` runs locally, so it's judge-agnostic. `download` and `login` currently support AtCoder only; other services return `unsupported judge`.
 
-| Judge | `download` |
-| --- | --- |
-| AtCoder | ✅ |
-| Codeforces | ⏳ |
-| yukicoder | ⏳ |
-| Aizu Online Judge | ⏳ |
-| others | ⏳ |
+| Judge | `download` | `login` |
+| --- | --- | --- |
+| AtCoder | ✅ | 🚧 |
+| Codeforces | ⏳ | ⏳ |
+| yukicoder | ⏳ | ⏳ |
+| Aizu Online Judge | ⏳ | ⏳ |
+| others | ⏳ | ⏳ |
 
 ## Build
 
@@ -88,6 +99,10 @@ oj download -n https://atcoder.jp/contests/abc100/tasks/abc100_a   # dry-run
 oj test -c ./a.out -d test/
 oj test -c "python3 solution.py" -t 2 -e 1e-6 -N
 oj test -c ./a.out -j 4 -D
+
+oj login https://atcoder.jp/                     # interactive prompt
+oj login --check https://atcoder.jp/             # is the saved session still valid?
+oj login --cookie ./cookies.json https://atcoder.jp/  # reuse a browser-exported jar
 ```
 
 ## License

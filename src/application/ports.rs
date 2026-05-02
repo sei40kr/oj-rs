@@ -62,6 +62,38 @@ pub trait ProblemDownloader: Send + Sync {
     fn download(&self, url: &str) -> Result<Vec<Sample>>;
 }
 
+/// Username + password pair for an online judge.
+#[derive(Debug, Clone)]
+pub struct Credentials {
+    pub username: String,
+    pub password: String,
+}
+
+pub trait Authenticator: Send + Sync {
+    /// Whether the persisted session is currently valid for the service.
+    fn is_logged_in(&self) -> Result<bool>;
+    /// Authenticate with the service and persist the session for later use.
+    fn login(&self, credentials: &Credentials) -> Result<()>;
+}
+
+/// Source of credentials when the user did not supply them on the command line.
+pub trait CredentialPrompt: Send + Sync {
+    fn prompt_username(&self) -> Result<String>;
+    fn prompt_password(&self) -> Result<String>;
+}
+
+/// User-facing presentation of the login capability.
+///
+/// Lifecycle (driven by the use case):
+/// - `already_logged_in()` — the persisted session is already valid; no login attempted.
+/// - `not_logged_in()` — `--check` was set and the session is not valid.
+/// - `login_succeeded()` — credentials were accepted and the session was persisted.
+pub trait LoginReporter: Send + Sync {
+    fn already_logged_in(&self);
+    fn not_logged_in(&self);
+    fn login_succeeded(&self);
+}
+
 pub trait SampleWriter: Send + Sync {
     fn write(&self, path: &Path, content: &[u8]) -> Result<()>;
 }

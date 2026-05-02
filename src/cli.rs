@@ -7,7 +7,7 @@ use std::time::Duration;
 
 use clap::{Args, Parser, Subcommand, ValueEnum};
 
-use crate::application::{DiscoveryQuery, DownloadSamplesInput, RunTestsInput};
+use crate::application::{DiscoveryQuery, DownloadSamplesInput, LoginInput, RunTestsInput};
 use crate::domain::{CompareMode as DomainCompareMode, DisplayMode as DomainDisplayMode};
 
 #[derive(Parser)]
@@ -27,6 +27,9 @@ pub enum Command {
         about = "Download sample test cases from a problem URL"
     )]
     Download(DownloadArgs),
+
+    #[command(about = "Sign in to an online judge")]
+    Login(LoginArgs),
 }
 
 #[derive(Args, Debug)]
@@ -170,6 +173,39 @@ pub struct DownloadArgs {
     /// Suppress per-sample output.
     #[arg(short = 's', long = "silent")]
     pub silent: bool,
+}
+
+#[derive(Args, Debug)]
+pub struct LoginArgs {
+    /// Service URL (e.g., `https://atcoder.jp/`).
+    #[arg(value_name = "URL")]
+    pub url: String,
+
+    /// Username (prompted if omitted).
+    #[arg(short = 'u', long = "username")]
+    pub username: Option<String>,
+
+    /// Password (prompted if omitted; passing on the command line is insecure).
+    #[arg(short = 'p', long = "password")]
+    pub password: Option<String>,
+
+    /// Check whether the persisted session is still valid, then exit.
+    #[arg(long = "check")]
+    pub check: bool,
+
+    /// Path to the cookie jar file.
+    #[arg(long = "cookie", value_name = "PATH")]
+    pub cookie: Option<PathBuf>,
+}
+
+impl LoginArgs {
+    pub fn into_use_case_input(self) -> LoginInput {
+        LoginInput {
+            username: self.username,
+            password: self.password,
+            check_only: self.check,
+        }
+    }
 }
 
 impl DownloadArgs {
