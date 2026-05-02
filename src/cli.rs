@@ -6,6 +6,7 @@ use std::path::PathBuf;
 use std::time::Duration;
 
 use clap::{Args, Parser, Subcommand, ValueEnum};
+use clap_complete::Shell;
 
 use crate::application::{
     DiscoveryQuery, DownloadSamplesInput, LoginInput, RunTestsInput, SubmitInput,
@@ -35,6 +36,16 @@ pub enum Command {
 
     #[command(alias = "s", about = "Submit a source file to an online judge")]
     Submit(SubmitArgs),
+
+    #[command(about = "Generate shell completion script")]
+    Completion(CompletionArgs),
+}
+
+#[derive(Args, Debug)]
+pub struct CompletionArgs {
+    /// Target shell.
+    #[arg(value_name = "SHELL")]
+    pub shell: Shell,
 }
 
 #[derive(Args, Debug)]

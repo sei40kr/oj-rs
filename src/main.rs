@@ -4,7 +4,8 @@
 use std::path::PathBuf;
 
 use anyhow::{Context, Result, anyhow, bail};
-use clap::Parser;
+use clap::{CommandFactory, Parser};
+use clap_complete::generate;
 
 mod application;
 mod cli;
@@ -38,7 +39,15 @@ fn dispatch(cli: Cli) -> Result<i32> {
         Command::Download(args) => run_download_command(args),
         Command::Login(args) => run_login_command(args),
         Command::Submit(args) => run_submit_command(args),
+        Command::Completion(args) => run_completion_command(args),
     }
+}
+
+fn run_completion_command(args: cli::CompletionArgs) -> Result<i32> {
+    let mut cmd = Cli::command();
+    let bin_name = cmd.get_name().to_string();
+    generate(args.shell, &mut cmd, bin_name, &mut std::io::stdout());
+    Ok(0)
 }
 
 fn run_test_command(args: cli::TestArgs) -> Result<i32> {

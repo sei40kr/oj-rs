@@ -12,6 +12,7 @@ path = "src/main.rs"
 [dependencies]
 anyhow = "1"
 clap = { version = "4", features = ["derive"] }
+clap_complete = "4"
 command-group = "5"
 cookie_store = { version = "0.21", features = ["serde_json"] }
 dirs = "5"
