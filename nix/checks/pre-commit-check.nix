@@ -9,6 +9,7 @@ let
 in
 inputs.git-hooks.lib.${pkgs.stdenv.hostPlatform.system}.run {
   src = inputs.self;
+  package = pkgs.prek;
   settings.rust.check.cargoDeps = pkgs.rustPlatform.importCargoLock {
     lockFile = ../../Cargo.lock;
   };
