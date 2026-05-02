@@ -15,10 +15,10 @@ mod infrastructure;
 use crate::application::{DownloadSamples, Login, RunTests, Submit};
 use crate::cli::{Cli, Command};
 use crate::infrastructure::{
-    AtCoderAuthenticator, AtCoderDownloader, AtCoderSubmitter, ConsoleLoginReporter,
-    ConsoleSampleDownloadReporter, ConsoleSubmitReporter, ConsoleTestRunReporter, FsSampleWriter,
-    FsTestCaseRepository, LibraryCheckerDownloader, ShellJudgeRunner, ShellSolutionExecutor,
-    StdinCredentialPrompt, StdinSubmitConfirmer,
+    AizuOnlineJudgeDownloader, AtCoderAuthenticator, AtCoderDownloader, AtCoderSubmitter,
+    ConsoleLoginReporter, ConsoleSampleDownloadReporter, ConsoleSubmitReporter,
+    ConsoleTestRunReporter, FsSampleWriter, FsTestCaseRepository, LibraryCheckerDownloader,
+    ShellJudgeRunner, ShellSolutionExecutor, StdinCredentialPrompt, StdinSubmitConfirmer,
 };
 
 fn main() {
@@ -138,6 +138,7 @@ fn run_submit_command(args: cli::SubmitArgs) -> Result<i32> {
 enum Service {
     AtCoder,
     LibraryChecker,
+    AizuOnlineJudge,
 }
 
 fn service_from_url(url: &str) -> Result<Service> {
@@ -149,6 +150,7 @@ fn service_from_url(url: &str) -> Result<Service> {
     match host {
         "atcoder.jp" | "beta.atcoder.jp" => Ok(Service::AtCoder),
         "judge.yosupo.jp" | "old.yosupo.jp" => Ok(Service::LibraryChecker),
+        "onlinejudge.u-aizu.ac.jp" | "judge.u-aizu.ac.jp" => Ok(Service::AizuOnlineJudge),
         other => bail!("unsupported judge: {other}"),
     }
 }
@@ -157,6 +159,7 @@ fn downloader_for(service: Service) -> Box<dyn application::ports::ProblemDownlo
     match service {
         Service::AtCoder => Box::new(AtCoderDownloader::new()),
         Service::LibraryChecker => Box::new(LibraryCheckerDownloader::new()),
+        Service::AizuOnlineJudge => Box::new(AizuOnlineJudgeDownloader::new()),
     }
 }
 
@@ -169,6 +172,9 @@ fn authenticator_for(
         // Library Checker auth runs through Firebase ID tokens rather than a
         // cookie session, so the cookie-based Authenticator port doesn't fit.
         Service::LibraryChecker => bail!("login is not supported for Library Checker"),
+        // AOJ uses a JSON `POST /session` flow whose response cookie doesn't
+        // round-trip through the cookie-jar Authenticator port.
+        Service::AizuOnlineJudge => bail!("login is not supported for Aizu Online Judge"),
     }
 }
 
@@ -182,6 +188,9 @@ fn submitter_for(
         // header — we don't issue those, so refuse the command instead of
         // silently failing inside the submitter.
         Service::LibraryChecker => bail!("submit is not supported for Library Checker"),
+        // AOJ submission posts JSON with a session id rather than a form cookie,
+        // so the cookie-jar Submitter port doesn't fit.
+        Service::AizuOnlineJudge => bail!("submit is not supported for Aizu Online Judge"),
     }
 }
 

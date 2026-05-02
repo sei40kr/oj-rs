@@ -1,3 +1,4 @@
+pub mod aizu_online_judge_downloader;
 pub mod atcoder_authenticator;
 pub mod atcoder_downloader;
 pub mod atcoder_submitter;
@@ -13,6 +14,7 @@ pub mod shell_judge;
 pub mod stdin_credential_prompt;
 pub mod stdin_submit_confirmer;
 
+pub use aizu_online_judge_downloader::AizuOnlineJudgeDownloader;
 pub use atcoder_authenticator::AtCoderAuthenticator;
 pub use atcoder_downloader::AtCoderDownloader;
 pub use atcoder_submitter::AtCoderSubmitter;
