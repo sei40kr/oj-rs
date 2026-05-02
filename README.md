@@ -13,7 +13,7 @@ Listed in planned migration order.
 | upstream `oj` | ojrs | Status |
 | --- | --- | --- |
 | `test` (`t`) | ✅ | Done |
-| `download` (`d`, `dl`) | 🚧 | AtCoder + Library Checker + Aizu Online Judge + HackerRank (samples); `--system` not yet wired |
+| `download` (`d`, `dl`) | 🚧 | AtCoder + Library Checker + Aizu Online Judge + HackerRank + CS Academy (samples); `--system` not yet wired |
 | `login` | 🚧 | AtCoder only; form login blocked by Cloudflare Turnstile (use `--cookie`) |
 | `submit` (`s`) | 🚧 | AtCoder only; POST blocked by Cloudflare Turnstile (same as `login`) |
 | `generate-input` (`g/i`) | ⏳ | Not started |
@@ -88,7 +88,7 @@ Listed in planned migration order.
 
 ### Supported online judges
 
-`test` runs locally, so it's judge-agnostic. `download`, `login`, and `submit` currently support AtCoder and (download only) Library Checker, Aizu Online Judge, and HackerRank; other services return `unsupported judge`.
+`test` runs locally, so it's judge-agnostic. `download` supports AtCoder, Library Checker, Aizu Online Judge, HackerRank, and CS Academy; `login` and `submit` are AtCoder-only. Other services return `unsupported judge`.
 
 | Judge | `download` | `login` | `submit` |
 | --- | --- | --- | --- |
@@ -96,6 +96,7 @@ Listed in planned migration order.
 | Library Checker | ✅ (samples) | ❌ Firebase Auth | ❌ Firebase Auth |
 | Aizu Online Judge | ✅ (samples) | ❌ JSON session API | ❌ JSON session API |
 | HackerRank | ✅ (samples) | ❌ JS-driven CSRF | ❌ JS-driven CSRF |
+| CS Academy | ✅ (samples) | ❌ upstream parity | ❌ upstream parity |
 | Codeforces | ⏳ | ⏳ | ⏳ |
 | yukicoder | ⏳ | ⏳ | ⏳ |
 | others | ⏳ | ⏳ | ⏳ |
@@ -106,6 +107,7 @@ Aizu Online Judge samples come from `judgedat.u-aizu.ac.jp/testcases/samples/{id
 
 HackerRank samples are scraped from `model.body_html` on the public REST endpoint (`/rest/contests/{contest}/challenges/{slug}`), not from the `download_testcases` ZIP that upstream Python `oj` uses. Only the in-statement samples are available; system tests served by the ZIP endpoint require a logged-in session and are out of scope until `--system` is wired up.
 
+CS Academy is a SPA, so samples are pulled from the same internal JSON endpoints the official frontend uses (`/contest/<name>/` for the task list and `/contest/get_contest_task/` for the example tests), gated by the `csrftoken` cookie set by the homepage.
 
 ## Build
 
@@ -123,6 +125,7 @@ oj download -n https://atcoder.jp/contests/abc100/tasks/abc100_a   # dry-run
 oj download https://judge.yosupo.jp/problem/aplusb                 # Library Checker
 oj download https://onlinejudge.u-aizu.ac.jp/courses/lesson/2/ITP1/1/ITP1_1_A  # Aizu Online Judge
 oj download https://www.hackerrank.com/challenges/solve-me-first   # HackerRank
+oj download https://csacademy.com/contest/round-38/task/path-union/  # CS Academy
 
 oj test -c ./a.out -d test/
 oj test -c "python3 solution.py" -t 2 -e 1e-6 -N

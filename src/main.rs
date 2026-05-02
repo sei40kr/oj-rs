@@ -16,10 +16,10 @@ use crate::application::{DownloadSamples, Login, RunTests, Submit};
 use crate::cli::{Cli, Command};
 use crate::infrastructure::{
     AizuOnlineJudgeDownloader, AtCoderAuthenticator, AtCoderDownloader, AtCoderSubmitter,
-    ConsoleLoginReporter, ConsoleSampleDownloadReporter, ConsoleSubmitReporter,
-    ConsoleTestRunReporter, FsSampleWriter, FsTestCaseRepository, HackerRankDownloader,
-    LibraryCheckerDownloader, ShellJudgeRunner, ShellSolutionExecutor, StdinCredentialPrompt,
-    StdinSubmitConfirmer,
+    CSAcademyDownloader, ConsoleLoginReporter, ConsoleSampleDownloadReporter,
+    ConsoleSubmitReporter, ConsoleTestRunReporter, FsSampleWriter, FsTestCaseRepository,
+    HackerRankDownloader, LibraryCheckerDownloader, ShellJudgeRunner, ShellSolutionExecutor,
+    StdinCredentialPrompt, StdinSubmitConfirmer,
 };
 
 fn main() {
@@ -141,6 +141,7 @@ enum Service {
     HackerRank,
     LibraryChecker,
     AizuOnlineJudge,
+    CSAcademy,
 }
 
 fn service_from_url(url: &str) -> Result<Service> {
@@ -154,6 +155,7 @@ fn service_from_url(url: &str) -> Result<Service> {
         "hackerrank.com" => Ok(Service::HackerRank),
         "judge.yosupo.jp" | "old.yosupo.jp" => Ok(Service::LibraryChecker),
         "onlinejudge.u-aizu.ac.jp" | "judge.u-aizu.ac.jp" => Ok(Service::AizuOnlineJudge),
+        "csacademy.com" => Ok(Service::CSAcademy),
         other => bail!("unsupported judge: {other}"),
     }
 }
@@ -164,6 +166,7 @@ fn downloader_for(service: Service) -> Box<dyn application::ports::ProblemDownlo
         Service::HackerRank => Box::new(HackerRankDownloader::new()),
         Service::LibraryChecker => Box::new(LibraryCheckerDownloader::new()),
         Service::AizuOnlineJudge => Box::new(AizuOnlineJudgeDownloader::new()),
+        Service::CSAcademy => Box::new(CSAcademyDownloader::new()),
     }
 }
 
@@ -182,6 +185,9 @@ fn authenticator_for(
         // AOJ uses a JSON `POST /session` flow whose response cookie doesn't
         // round-trip through the cookie-jar Authenticator port.
         Service::AizuOnlineJudge => bail!("login is not supported for Aizu Online Judge"),
+        // CS Academy sample download works without an authenticated session;
+        // upstream `oj` likewise has no login support for it.
+        Service::CSAcademy => bail!("login is not supported for CS Academy"),
     }
 }
 
@@ -201,6 +207,7 @@ fn submitter_for(
         // AOJ submission posts JSON with a session id rather than a form cookie,
         // so the cookie-jar Submitter port doesn't fit.
         Service::AizuOnlineJudge => bail!("submit is not supported for Aizu Online Judge"),
+        Service::CSAcademy => bail!("submit is not supported for CS Academy"),
     }
 }
 
