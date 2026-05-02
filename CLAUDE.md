@@ -34,6 +34,10 @@ cargo run -- test -c ./a.out -d test/  # invoke the oj binary via cargo
 
 The binary is named `oj` (not `ojrs`) to match upstream's command name — see `[[bin]]` in `Cargo.toml`.
 
+## Commit messages
+
+Follow [Angular Conventional Commits](https://github.com/angular/angular/blob/main/contributing-docs/commit-message-guidelines.md). Types: `build`, `ci`, `docs`, `feat`, `fix`, `perf`, `refactor`, `test`, `chore`.
+
 ## Architecture
 
 Clean Architecture / hexagonal: dependencies point inward only — `main → cli + infrastructure → application → domain`. Inner layers never import outer layers. The `cli` layer owns clap and converts clap-derived types into use-case inputs via `From` so `domain` and `application` stay framework-free. `main.rs` is the composition root.
