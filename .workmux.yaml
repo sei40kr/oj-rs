@@ -1,0 +1,5 @@
+files:
+  copy:
+    - '<global>'
+    - .cargo
+    - target
