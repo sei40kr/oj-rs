@@ -1,4 +1,4 @@
-# ojrs
+# oj-rs
 
 A Rust port of [online-judge-tools/oj](https://github.com/online-judge-tools/oj).
 
@@ -10,7 +10,7 @@ The goal is CLI-level compatibility with upstream: flag names, defaults, and con
 
 Listed in planned migration order.
 
-| upstream `oj` | ojrs | Status |
+| upstream `oj` | oj-rs | Status |
 | --- | --- | --- |
 | `test` (`t`) | ✅ | Done |
 | `download` (`d`, `dl`) | 🚧 | AtCoder + Library Checker + Aizu Online Judge + HackerRank + CS Academy (samples); `--system` not yet wired |

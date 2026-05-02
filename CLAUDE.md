@@ -32,7 +32,7 @@ cargo test domain::compare:: # run a single module's tests
 cargo run -- test -c ./a.out -d test/  # invoke the oj binary via cargo
 ```
 
-The binary is named `oj` (not `ojrs`) to match upstream's command name — see `[[bin]]` in `Cargo.toml`.
+The binary is named `oj` (not `oj-rs`) to match upstream's command name — see `[[bin]]` in `Cargo.toml`.
 
 ## Commit messages
 

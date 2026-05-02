@@ -31,7 +31,7 @@ impl JudgeRunner for ShellJudgeRunner {
         actual: &[u8],
         expected_path: Option<&Path>,
     ) -> Result<bool> {
-        let mut actual_file = NamedTempFile::with_prefix("ojrs-actual-")
+        let mut actual_file = NamedTempFile::with_prefix("oj-rs-actual-")
             .context("failed to create temp file for actual output")?;
         std::io::Write::write_all(actual_file.as_file_mut(), actual)
             .context("failed to write actual to temp file")?;

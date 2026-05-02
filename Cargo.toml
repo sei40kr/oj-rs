@@ -1,5 +1,5 @@
 [package]
-name = "ojrs"
+name = "oj-rs"
 version = "0.1.0"
 edition = "2021"
 description = "Rust port of online-judge-tools/oj"
