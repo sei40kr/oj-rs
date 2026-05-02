@@ -18,9 +18,16 @@ let
   );
 in
 pkgs.mkShell {
-  packages = [ rustToolchain ];
+  packages = [
+    rustToolchain
+    pkgs.mold
+    pkgs.sccache
+  ];
 
-  env = { };
+  env = {
+    RUSTC_WRAPPER = "sccache";
+    RUSTFLAGS = "-C link-arg=-fuse-ld=mold";
+  };
 
   shellHook = ''
     ${pre-commit-check.shellHook}
