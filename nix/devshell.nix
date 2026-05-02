@@ -1,12 +1,25 @@
-{ inputs, pkgs, ... }:
+{
+  inputs,
+  perSystem,
+  pkgs,
+  ...
+}:
 let
-  pre-commit-check = import ./checks/pre-commit-check.nix { inherit inputs pkgs; };
+  pre-commit-check = import ./checks/pre-commit-check.nix { inherit inputs perSystem pkgs; };
+  rustToolchain = perSystem.fenix.combine (
+    with perSystem.fenix.stable;
+    [
+      cargo
+      clippy
+      rustc
+      rustfmt
+      rust-src
+    ]
+  );
 in
 pkgs.mkShell {
-  # Add build dependencies
-  packages = [ ];
+  packages = [ rustToolchain ];
 
-  # Add environment variables
   env = { };
 
   shellHook = ''

@@ -1,6 +1,11 @@
-{ inputs, pkgs, ... }:
+{
+  inputs,
+  perSystem,
+  pkgs,
+  ...
+}:
 let
-  treefmtEval = inputs.treefmt.lib.evalModule pkgs ../treefmt.nix;
+  treefmtEval = import ../treefmt.nix { inherit inputs perSystem pkgs; };
 in
 inputs.git-hooks.lib.${pkgs.stdenv.hostPlatform.system}.run {
   src = inputs.self;
@@ -13,6 +18,9 @@ inputs.git-hooks.lib.${pkgs.stdenv.hostPlatform.system}.run {
     clippy = {
       enable = true;
       settings.denyWarnings = true;
+      packageOverrides = {
+        inherit (perSystem.fenix.stable) cargo clippy;
+      };
     };
     treefmt = {
       enable = true;

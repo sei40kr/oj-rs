@@ -1,5 +1,10 @@
-{ inputs, pkgs, ... }:
+{
+  inputs,
+  perSystem,
+  pkgs,
+  ...
+}:
 let
-  treefmtEval = inputs.treefmt.lib.evalModule pkgs ./treefmt.nix;
+  treefmtEval = import ./treefmt.nix { inherit inputs perSystem pkgs; };
 in
 treefmtEval.config.build.wrapper

@@ -9,6 +9,8 @@
     treefmt.inputs.nixpkgs.follows = "nixpkgs";
     git-hooks.url = "github:cachix/git-hooks.nix";
     git-hooks.inputs.nixpkgs.follows = "nixpkgs";
+    fenix.url = "github:nix-community/fenix";
+    fenix.inputs.nixpkgs.follows = "nixpkgs";
   };
 
   outputs =
