@@ -13,7 +13,7 @@ Listed in planned migration order.
 | upstream `oj` | ojrs | Status |
 | --- | --- | --- |
 | `test` (`t`) | ✅ | Done |
-| `download` (`d`, `dl`) | ⏳ | Not started |
+| `download` (`d`, `dl`) | 🚧 | AtCoder only; `--system` not yet wired |
 | `login` | ⏳ | Not started |
 | `submit` (`s`) | ⏳ | Not started |
 | `generate-input` (`g/i`) | ⏳ | Not started |
@@ -45,9 +45,31 @@ Listed in planned migration order.
 | `--print-memory` | ⏳ |
 | `--log-file` | ⏳ |
 
+### `oj download` flags
+
+| Flag | Status |
+| --- | --- |
+| `-d, --directory` | ✅ |
+| `-f, --format` | ✅ |
+| `-n, --dry-run` | ✅ |
+| `-s, --silent` | ✅ |
+| Positional URL | ✅ |
+| `-a, --system` | ⏳ |
+| `--yukicoder-token` | ⏳ |
+| `--dropbox-token` | ⏳ |
+| `--log-file` | ⏳ |
+
 ### Supported online judges
 
-`test` runs locally, so it's judge-agnostic. Online-judge support will land alongside `download` / `submit`, starting with AtCoder.
+`test` runs locally, so it's judge-agnostic. `download` currently supports AtCoder only; other services return `unsupported judge`.
+
+| Judge | `download` |
+| --- | --- |
+| AtCoder | ✅ |
+| Codeforces | ⏳ |
+| yukicoder | ⏳ |
+| Aizu Online Judge | ⏳ |
+| others | ⏳ |
 
 ## Build
 
@@ -60,6 +82,9 @@ The binary is `target/release/oj` (named `oj` to match upstream).
 ## Usage
 
 ```
+oj download https://atcoder.jp/contests/abc100/tasks/abc100_a
+oj download -n https://atcoder.jp/contests/abc100/tasks/abc100_a   # dry-run
+
 oj test -c ./a.out -d test/
 oj test -c "python3 solution.py" -t 2 -e 1e-6 -N
 oj test -c ./a.out -j 4 -D

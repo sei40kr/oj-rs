@@ -7,7 +7,7 @@ use std::time::Duration;
 
 use clap::{Args, Parser, Subcommand, ValueEnum};
 
-use crate::application::{DiscoveryQuery, RunTestsInput};
+use crate::application::{DiscoveryQuery, DownloadSamplesInput, RunTestsInput};
 use crate::domain::{CompareMode as DomainCompareMode, DisplayMode as DomainDisplayMode};
 
 #[derive(Parser)]
@@ -21,6 +21,12 @@ pub struct Cli {
 pub enum Command {
     #[command(alias = "t", about = "Run tests against sample cases")]
     Test(TestArgs),
+
+    #[command(
+        aliases = ["d", "dl"],
+        about = "Download sample test cases from a problem URL"
+    )]
+    Download(DownloadArgs),
 }
 
 #[derive(Args, Debug)]
@@ -134,6 +140,45 @@ impl From<CliDisplayMode> for DomainDisplayMode {
             CliDisplayMode::All => DomainDisplayMode::All,
             CliDisplayMode::Diff => DomainDisplayMode::Diff,
             CliDisplayMode::DiffAll => DomainDisplayMode::DiffAll,
+        }
+    }
+}
+
+#[derive(Args, Debug)]
+pub struct DownloadArgs {
+    /// Problem URL.
+    #[arg(value_name = "URL")]
+    pub url: String,
+
+    /// Format string for the output filenames. `%b` = sample name, `%e` = `in`/`out`,
+    /// `%i` = sample index (1-based), `%n` = full sample name, `%d` = sample dirname.
+    #[arg(short = 'f', long = "format", default_value = "%b.%e")]
+    pub format: String,
+
+    /// Directory to write test cases into.
+    #[arg(short = 'd', long = "directory", default_value = "test/")]
+    pub directory: PathBuf,
+
+    /// Print samples to stdout instead of writing files.
+    #[arg(short = 'n', long = "dry-run")]
+    pub dry_run: bool,
+
+    /// Download system tests (requires login). Not yet implemented.
+    #[arg(short = 'a', long = "system")]
+    pub system: bool,
+
+    /// Suppress per-sample output.
+    #[arg(short = 's', long = "silent")]
+    pub silent: bool,
+}
+
+impl DownloadArgs {
+    pub fn into_use_case_input(self) -> DownloadSamplesInput {
+        DownloadSamplesInput {
+            url: self.url,
+            directory: self.directory,
+            format: self.format,
+            dry_run: self.dry_run,
         }
     }
 }

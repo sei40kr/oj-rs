@@ -7,7 +7,7 @@ use std::time::Duration;
 
 use anyhow::Result;
 
-use crate::domain::{CaseOutcome, DisplayMode, TestCase};
+use crate::domain::{CaseOutcome, DisplayMode, Sample, TestCase};
 
 /// Inputs for the test-case discovery port.
 #[derive(Debug, Clone)]
@@ -57,7 +57,30 @@ pub trait JudgeRunner: Send + Sync {
     ) -> Result<bool>;
 }
 
-/// User-facing presentation of test results.
+pub trait ProblemDownloader: Send + Sync {
+    /// Fetch and parse the problem page at `url`, returning samples in order.
+    fn download(&self, url: &str) -> Result<Vec<Sample>>;
+}
+
+pub trait SampleWriter: Send + Sync {
+    fn write(&self, path: &Path, content: &[u8]) -> Result<()>;
+}
+
+/// User-facing presentation of the sample-download capability.
+///
+/// Lifecycle:
+/// 1. `samples_found(count)` — once, after the page is parsed. Skipped when zero.
+/// 2. `sample_written(...)` per case (real run) **or** `dry_run_sample(...)`
+///    per case (when `--dry-run` is set).
+/// 3. `no_samples_found()` is called instead of (1)+(2) when the page yielded zero samples.
+pub trait SampleDownloadReporter: Send + Sync {
+    fn samples_found(&self, count: usize);
+    fn sample_written(&self, sample: &Sample, input_path: &Path, output_path: Option<&Path>);
+    fn dry_run_sample(&self, sample: &Sample);
+    fn no_samples_found(&self);
+}
+
+/// User-facing presentation of the test-run capability.
 ///
 /// Lifecycle (driven by the use case):
 /// 1. `run_started(total)` — once, before any case runs.
@@ -69,7 +92,7 @@ pub trait JudgeRunner: Send + Sync {
 ///
 /// Or, if no cases are discovered: `no_cases_found(query)` — and none of the
 /// other methods will be called.
-pub trait Reporter: Send + Sync {
+pub trait TestRunReporter: Send + Sync {
     fn run_started(&self, total: usize);
     fn case_finished(
         &self,

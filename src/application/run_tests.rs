@@ -11,7 +11,8 @@ use rayon::prelude::*;
 use crate::domain::{CaseOutcome, CompareMode, DisplayMode, TestCase, Verdict, compare};
 
 use super::ports::{
-    DiscoveryQuery, ExecutionRequest, JudgeRunner, Reporter, SolutionExecutor, TestCaseRepository,
+    DiscoveryQuery, ExecutionRequest, JudgeRunner, SolutionExecutor, TestCaseRepository,
+    TestRunReporter,
 };
 
 #[derive(Debug, Clone)]
@@ -43,7 +44,7 @@ pub struct RunTests<'a> {
     pub repository: &'a dyn TestCaseRepository,
     pub executor: &'a (dyn SolutionExecutor + 'a),
     pub judge: &'a dyn JudgeRunner,
-    pub reporter: &'a dyn Reporter,
+    pub reporter: &'a dyn TestRunReporter,
 }
 
 impl<'a> RunTests<'a> {

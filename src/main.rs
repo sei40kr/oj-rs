@@ -1,7 +1,7 @@
 //! Composition root: parses the CLI, instantiates concrete adapters, and
 //! drives the use case. This is the only place the layers are wired together.
 
-use anyhow::Result;
+use anyhow::{Context, Result, bail};
 use clap::Parser;
 
 mod application;
@@ -9,10 +9,11 @@ mod cli;
 mod domain;
 mod infrastructure;
 
-use crate::application::RunTests;
+use crate::application::{DownloadSamples, RunTests};
 use crate::cli::{Cli, Command};
 use crate::infrastructure::{
-    ConsoleReporter, FsTestCaseRepository, ShellJudgeRunner, ShellSolutionExecutor,
+    AtCoderDownloader, ConsoleSampleDownloadReporter, ConsoleTestRunReporter, FsSampleWriter,
+    FsTestCaseRepository, ShellJudgeRunner, ShellSolutionExecutor,
 };
 
 fn main() {
@@ -30,6 +31,7 @@ fn main() {
 fn dispatch(cli: Cli) -> Result<i32> {
     match cli.command {
         Command::Test(args) => run_test_command(args),
+        Command::Download(args) => run_download_command(args),
     }
 }
 
@@ -39,7 +41,7 @@ fn run_test_command(args: cli::TestArgs) -> Result<i32> {
     let repository = FsTestCaseRepository::new();
     let executor = ShellSolutionExecutor::new();
     let judge = ShellJudgeRunner::new();
-    let reporter = ConsoleReporter::new();
+    let reporter = ConsoleTestRunReporter::new();
 
     let use_case = RunTests {
         repository: &repository,
@@ -53,4 +55,33 @@ fn run_test_command(args: cli::TestArgs) -> Result<i32> {
     } else {
         1
     })
+}
+
+fn run_download_command(args: cli::DownloadArgs) -> Result<i32> {
+    if args.system {
+        bail!("--system is not yet implemented");
+    }
+
+    let parsed = url::Url::parse(&args.url).context("invalid URL")?;
+    let host = parsed.host_str().context("URL has no host")?;
+    let downloader = pick_downloader(host)?;
+
+    let writer = FsSampleWriter::new();
+    let reporter = ConsoleSampleDownloadReporter::new(args.silent);
+
+    let use_case = DownloadSamples {
+        downloader: downloader.as_ref(),
+        writer: &writer,
+        reporter: &reporter,
+    };
+    let output = use_case.execute(args.into_use_case_input())?;
+    Ok(if output.any_found() { 0 } else { 1 })
+}
+
+fn pick_downloader(host: &str) -> Result<Box<dyn application::ports::ProblemDownloader>> {
+    let host = host.trim_start_matches("www.");
+    match host {
+        "atcoder.jp" | "beta.atcoder.jp" => Ok(Box::new(AtCoderDownloader::new())),
+        other => bail!("unsupported judge: {other}"),
+    }
 }

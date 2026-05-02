@@ -1,18 +1,18 @@
-//! Console implementation of `Reporter`. Output mirrors upstream `oj test`
+//! Console implementation of `TestRunReporter`. Output mirrors upstream `oj test`
 //! closely so existing scripts that grep this output keep working.
 
 use std::sync::Mutex;
 
-use crate::application::ports::{DiscoveryQuery, Reporter};
+use crate::application::ports::{DiscoveryQuery, TestRunReporter};
 use crate::domain::{CaseOutcome, DisplayMode, Verdict};
 
-pub struct ConsoleReporter {
+pub struct ConsoleTestRunReporter {
     /// Serializes prints across worker threads so per-case output blocks
     /// stay contiguous when running with `-j`.
     print_lock: Mutex<()>,
 }
 
-impl ConsoleReporter {
+impl ConsoleTestRunReporter {
     pub fn new() -> Self {
         Self {
             print_lock: Mutex::new(()),
@@ -20,13 +20,13 @@ impl ConsoleReporter {
     }
 }
 
-impl Default for ConsoleReporter {
+impl Default for ConsoleTestRunReporter {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl Reporter for ConsoleReporter {
+impl TestRunReporter for ConsoleTestRunReporter {
     fn run_started(&self, total: usize) {
         let _guard = self.print_lock.lock().unwrap();
         println!("[*] {total} cases found");
