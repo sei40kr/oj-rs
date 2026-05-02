@@ -17,8 +17,9 @@ use crate::cli::{Cli, Command};
 use crate::infrastructure::{
     AizuOnlineJudgeDownloader, AtCoderAuthenticator, AtCoderDownloader, AtCoderSubmitter,
     ConsoleLoginReporter, ConsoleSampleDownloadReporter, ConsoleSubmitReporter,
-    ConsoleTestRunReporter, FsSampleWriter, FsTestCaseRepository, LibraryCheckerDownloader,
-    ShellJudgeRunner, ShellSolutionExecutor, StdinCredentialPrompt, StdinSubmitConfirmer,
+    ConsoleTestRunReporter, FsSampleWriter, FsTestCaseRepository, HackerRankDownloader,
+    LibraryCheckerDownloader, ShellJudgeRunner, ShellSolutionExecutor, StdinCredentialPrompt,
+    StdinSubmitConfirmer,
 };
 
 fn main() {
@@ -137,6 +138,7 @@ fn run_submit_command(args: cli::SubmitArgs) -> Result<i32> {
 #[derive(Copy, Clone, Debug)]
 enum Service {
     AtCoder,
+    HackerRank,
     LibraryChecker,
     AizuOnlineJudge,
 }
@@ -149,6 +151,7 @@ fn service_from_url(url: &str) -> Result<Service> {
         .trim_start_matches("www.");
     match host {
         "atcoder.jp" | "beta.atcoder.jp" => Ok(Service::AtCoder),
+        "hackerrank.com" => Ok(Service::HackerRank),
         "judge.yosupo.jp" | "old.yosupo.jp" => Ok(Service::LibraryChecker),
         "onlinejudge.u-aizu.ac.jp" | "judge.u-aizu.ac.jp" => Ok(Service::AizuOnlineJudge),
         other => bail!("unsupported judge: {other}"),
@@ -158,6 +161,7 @@ fn service_from_url(url: &str) -> Result<Service> {
 fn downloader_for(service: Service) -> Box<dyn application::ports::ProblemDownloader> {
     match service {
         Service::AtCoder => Box::new(AtCoderDownloader::new()),
+        Service::HackerRank => Box::new(HackerRankDownloader::new()),
         Service::LibraryChecker => Box::new(LibraryCheckerDownloader::new()),
         Service::AizuOnlineJudge => Box::new(AizuOnlineJudgeDownloader::new()),
     }
@@ -169,6 +173,9 @@ fn authenticator_for(
 ) -> Result<Box<dyn application::ports::Authenticator>> {
     match service {
         Service::AtCoder => Ok(Box::new(AtCoderAuthenticator::new(cookie_path)?)),
+        // HackerRank's login is gated by a JS-driven CSRF + bot-protection flow
+        // we can't replay from a plain HTTP client. Refuse rather than guess.
+        Service::HackerRank => bail!("login is not supported for HackerRank"),
         // Library Checker auth runs through Firebase ID tokens rather than a
         // cookie session, so the cookie-based Authenticator port doesn't fit.
         Service::LibraryChecker => bail!("login is not supported for Library Checker"),
@@ -184,6 +191,9 @@ fn submitter_for(
 ) -> Result<Box<dyn application::ports::Submitter>> {
     match service {
         Service::AtCoder => Ok(Box::new(AtCoderSubmitter::new(cookie_path)?)),
+        // Submitting on HackerRank requires the same logged-in session that
+        // login can't currently produce, so reject the command up front.
+        Service::HackerRank => bail!("submit is not supported for HackerRank"),
         // Submission requires a Firebase ID token in an `Authorization: Bearer`
         // header — we don't issue those, so refuse the command instead of
         // silently failing inside the submitter.
