@@ -13,7 +13,7 @@ Listed in planned migration order.
 | upstream `oj` | ojrs | Status |
 | --- | --- | --- |
 | `test` (`t`) | ✅ | Done |
-| `download` (`d`, `dl`) | 🚧 | AtCoder only; `--system` not yet wired |
+| `download` (`d`, `dl`) | 🚧 | AtCoder + Library Checker (samples); `--system` not yet wired |
 | `login` | 🚧 | AtCoder only; form login blocked by Cloudflare Turnstile (use `--cookie`) |
 | `submit` (`s`) | 🚧 | AtCoder only; POST blocked by Cloudflare Turnstile (same as `login`) |
 | `generate-input` (`g/i`) | ⏳ | Not started |
@@ -88,15 +88,18 @@ Listed in planned migration order.
 
 ### Supported online judges
 
-`test` runs locally, so it's judge-agnostic. `download`, `login`, and `submit` currently support AtCoder only; other services return `unsupported judge`.
+`test` runs locally, so it's judge-agnostic. `download`, `login`, and `submit` currently support AtCoder and (download only) Library Checker; other services return `unsupported judge`.
 
 | Judge | `download` | `login` | `submit` |
 | --- | --- | --- | --- |
 | AtCoder | ✅ | 🚧 | 🚧 |
+| Library Checker | ✅ (samples) | ❌ Firebase Auth | ❌ Firebase Auth |
 | Codeforces | ⏳ | ⏳ | ⏳ |
 | yukicoder | ⏳ | ⏳ | ⏳ |
 | Aizu Online Judge | ⏳ | ⏳ | ⏳ |
 | others | ⏳ | ⏳ | ⏳ |
+
+Library Checker samples come from the official frontend's data sources (`v3.api.judge.yosupo.jp` for the testcases hash, then the public GCS bucket), not by cloning `yosupo06/library-checker-problems` and running `generate.py` like upstream Python `oj`. As a consequence, only example cases are downloadable; `--system` will not be supported via this path.
 
 ## Build
 
@@ -111,6 +114,7 @@ The binary is `target/release/oj` (named `oj` to match upstream).
 ```
 oj download https://atcoder.jp/contests/abc100/tasks/abc100_a
 oj download -n https://atcoder.jp/contests/abc100/tasks/abc100_a   # dry-run
+oj download https://judge.yosupo.jp/problem/aplusb                 # Library Checker
 
 oj test -c ./a.out -d test/
 oj test -c "python3 solution.py" -t 2 -e 1e-6 -N

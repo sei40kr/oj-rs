@@ -16,8 +16,8 @@ use crate::cli::{Cli, Command};
 use crate::infrastructure::{
     AtCoderAuthenticator, AtCoderDownloader, AtCoderSubmitter, ConsoleLoginReporter,
     ConsoleSampleDownloadReporter, ConsoleSubmitReporter, ConsoleTestRunReporter, FsSampleWriter,
-    FsTestCaseRepository, ShellJudgeRunner, ShellSolutionExecutor, StdinCredentialPrompt,
-    StdinSubmitConfirmer,
+    FsTestCaseRepository, LibraryCheckerDownloader, ShellJudgeRunner, ShellSolutionExecutor,
+    StdinCredentialPrompt, StdinSubmitConfirmer,
 };
 
 fn main() {
@@ -128,6 +128,7 @@ fn run_submit_command(args: cli::SubmitArgs) -> Result<i32> {
 #[derive(Copy, Clone, Debug)]
 enum Service {
     AtCoder,
+    LibraryChecker,
 }
 
 fn service_from_url(url: &str) -> Result<Service> {
@@ -138,6 +139,7 @@ fn service_from_url(url: &str) -> Result<Service> {
         .trim_start_matches("www.");
     match host {
         "atcoder.jp" | "beta.atcoder.jp" => Ok(Service::AtCoder),
+        "judge.yosupo.jp" | "old.yosupo.jp" => Ok(Service::LibraryChecker),
         other => bail!("unsupported judge: {other}"),
     }
 }
@@ -145,6 +147,7 @@ fn service_from_url(url: &str) -> Result<Service> {
 fn downloader_for(service: Service) -> Box<dyn application::ports::ProblemDownloader> {
     match service {
         Service::AtCoder => Box::new(AtCoderDownloader::new()),
+        Service::LibraryChecker => Box::new(LibraryCheckerDownloader::new()),
     }
 }
 
@@ -154,6 +157,9 @@ fn authenticator_for(
 ) -> Result<Box<dyn application::ports::Authenticator>> {
     match service {
         Service::AtCoder => Ok(Box::new(AtCoderAuthenticator::new(cookie_path)?)),
+        // Library Checker auth runs through Firebase ID tokens rather than a
+        // cookie session, so the cookie-based Authenticator port doesn't fit.
+        Service::LibraryChecker => bail!("login is not supported for Library Checker"),
     }
 }
 
@@ -163,6 +169,10 @@ fn submitter_for(
 ) -> Result<Box<dyn application::ports::Submitter>> {
     match service {
         Service::AtCoder => Ok(Box::new(AtCoderSubmitter::new(cookie_path)?)),
+        // Submission requires a Firebase ID token in an `Authorization: Bearer`
+        // header — we don't issue those, so refuse the command instead of
+        // silently failing inside the submitter.
+        Service::LibraryChecker => bail!("submit is not supported for Library Checker"),
     }
 }
 
